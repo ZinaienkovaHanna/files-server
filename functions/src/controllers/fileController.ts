@@ -1,21 +1,25 @@
 import { Request, Response } from 'express';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { ERROR400, STANDARD } from '../helpers/constants';
-import { ERRORS, handleServerError } from '../helpers/error';
+import * as FileRepository from '../repositories';
+import { STANDARD } from '../helpers/constants';
+import { handleServerError } from '../helpers/error';
 import { fileSchema, File } from '../models';
-import { db } from '../config';
 
-export const getFiles = async (req: Request, res: Response) => {
+export const getAllFiles = async (req: Request, res: Response) => {
     try {
-        const querySnapshot = await getDocs(collection(db, 'files'));
+        const files = await FileRepository.getAllFiles();
 
-        const files: File[] = [];
+        return res.status(STANDARD.SUCCESS).json(files);
+    } catch (error) {
+        handleServerError(res, error);
+    }
+};
 
-        querySnapshot.forEach((doc) => {
-            files.push(doc.data() as File);
-        });
+export const getFilesByUserId = async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const files = await FileRepository.getFilesByUserId(userId);
 
-        return res.status(200).json(files);
+        return res.status(STANDARD.SUCCESS).json(files);
     } catch (error) {
         handleServerError(res, error);
     }
@@ -29,39 +33,45 @@ export const addFile = async (req: Request, res: Response) => {
             userId: userId,
             name: name,
             text: text,
-            fileSize: 10,
+            fileData: 'fileData',
+            fileSize: 'fileData.size',
             isFavorite: false,
-            isArchive: false,
-            isSelected: false,
-            isEditingName: false,
         };
 
         await fileSchema.validate(newFile, { abortEarly: false });
 
-        const docRef = await addDoc(collection(db, 'files'), newFile);
+        const fileId = await FileRepository.addNewFile(newFile);
 
-        return res.status(STANDARD.SUCCESS).json({ id: docRef.id });
+        return res.status(STANDARD.CREATED).json({ id: fileId });
     } catch (error) {
         handleServerError(res, error);
     }
 };
 
-export const getFilesByUserId = async (req: Request, res: Response) => {
+export const updateFile = async (req: Request, res: Response) => {
     try {
-        const { userId } = req.params;
+        const { id } = req.params;
+        const { name, isFavorite } = req.body;
+        const updatedData: Partial<File> = {};
 
-        const q = query(collection(db, 'files'), where('userId', '==', userId));
-        const querySnapshot = await getDocs(q);
+        if (name) updatedData.name = name;
+        if (isFavorite) updatedData.isFavorite = isFavorite;
 
-        if (querySnapshot.empty) res.status(ERROR400.statusCode).json(ERRORS.filesNotExists);
+        await FileRepository.updateFileById(id, updatedData);
 
-        const files: File[] = [];
+        return res.status(STANDARD.SUCCESS).json({ message: 'File updated successfully' });
+    } catch (error) {
+        handleServerError(res, error);
+    }
+};
 
-        querySnapshot.forEach((doc) => {
-            files.push(doc.data() as File);
-        });
+export const deleteFile = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
 
-        return res.status(STANDARD.SUCCESS).json(files);
+        await FileRepository.deleteFileById(id);
+
+        return res.status(STANDARD.SUCCESS).json({ message: 'File deleted successfully' });
     } catch (error) {
         handleServerError(res, error);
     }

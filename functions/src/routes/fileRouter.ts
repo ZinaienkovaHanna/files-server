@@ -1,10 +1,12 @@
 import express from 'express';
-import { getFiles, addFile, getFilesByUserId } from '../controllers/fileController';
+import { getAllFiles, addFile, getFilesByUserId, deleteFile, updateFile } from '../controllers';
 
 const router = express.Router();
 
-router.get('/files', getFiles);
-router.post('/files', addFile);
+router.get('/files', getAllFiles);
 router.get('/files/:userId', getFilesByUserId);
+router.post('/files', addFile);
+router.delete('/files/:id', deleteFile);
+router.patch('/files/:id', updateFile);
 
 export default router;

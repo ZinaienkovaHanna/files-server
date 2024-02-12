@@ -8,4 +8,6 @@ export const handleServerError = (res: Response, error: any) => {
 export const ERRORS = {
     invalidToken: 'Error: Token is invalid.',
     filesNotExists: 'Error: Files not exists',
+    fileNotUploaded: 'File not uploaded',
+    fileNotFound: 'File not found',
 };

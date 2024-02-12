@@ -5,10 +5,8 @@ export const fileSchema = object().shape({
     name: string().required(),
     text: string().required(),
     fileSize: string().required(),
-    isFavorite: boolean().default(false),
-    isArchive: boolean().default(false),
-    isSelected: boolean().default(false),
-    isEditingName: boolean().default(false),
+    fileData: string().required(),
+    isFavorite: boolean().default(false).required(),
 });
 
 export type File = InferType<typeof fileSchema>;
